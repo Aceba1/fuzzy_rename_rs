@@ -558,9 +558,11 @@ impl eframe::App for MainApp {
         // Table
 
         CentralPanel::default().show(ctx, |ui| {
-            //ui.with_layout(Layout::centered_and_justified(Direction::TopDown), |ui| {
+            ui.style_mut().wrap = Some(false);
 
             TableBuilder::new(ui)
+                .striped(true)
+                .auto_shrink([false; 2])
                 .column(
                     Column::remainder()
                         .clip(true)
@@ -629,12 +631,6 @@ impl eframe::App for MainApp {
 
                             row.col(|ui| {
                                 ui.menu_button(choice_similarity, |ui| {
-                                    if item.manual_choice.is_some() {
-                                        if ui.button("Restore default").clicked() {
-                                            item.reset_choice();
-                                        }
-                                    }
-
                                     ui.add_enabled_ui(false, |ui| {
                                         if ui.button("Pick a match...").clicked() {
                                             // TODO: Add match picker window
@@ -643,22 +639,34 @@ impl eframe::App for MainApp {
 
                                     ui.separator();
 
-                                    for choice in item.choice_map.clone() {
-                                        if ui
-                                            .button(format!(
-                                                "[{:2.2}%] {}",
-                                                100.0 * choice.1,
-                                                remove_extension(
-                                                    &self.search.choice_names[choice.0].name
-                                                )
-                                            ))
-                                            .clicked()
-                                        {
+                                    for (c_index, choice) in
+                                        item.choice_map.clone().iter().enumerate()
+                                    {
+                                        let mut btn = Button::new(format!(
+                                            "[{:2.2}%] {}",
+                                            100.0 * choice.1,
+                                            remove_extension(
+                                                &self.search.choice_names[choice.0].name
+                                            )
+                                        ));
+                                        if (c_index % 2) == 1 {
+                                            btn = btn.fill(ui.visuals().faint_bg_color);
+                                        }
+
+                                        if ui.add(btn).clicked() {
                                             item.set_choice(Some(choice.0));
                                         }
                                     }
-                                    if ui.button("[No match]").clicked() {
+                                    if ui.button("[Don't use match]").clicked() {
                                         item.set_choice(None);
+                                    }
+
+                                    ui.separator();
+
+                                    if item.manual_choice.is_some() {
+                                        if ui.button("Restore default").clicked() {
+                                            item.reset_choice();
+                                        }
                                     }
                                 });
                             });
