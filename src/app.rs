@@ -12,25 +12,29 @@ fn remove_extension(s: &str) -> &str {
 }
 
 fn pick_folder(directory: &str, title: &str) -> Option<PathBuf> {
-    #[cfg(not(target_arch = "wasm32"))] {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
         return rfd::FileDialog::new()
             .set_directory(directory)
             .set_title(title)
             .pick_folder();
     }
-    #[cfg(target_arch = "wasm32")] {
+    #[cfg(target_arch = "wasm32")]
+    {
         return None;
     }
 }
 
 fn pick_files(directory: &str, title: &str) -> Option<Vec<PathBuf>> {
-    #[cfg(not(target_arch = "wasm32"))] {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
         return rfd::FileDialog::new()
             .set_directory(directory)
             .set_title(title)
             .pick_files();
     }
-    #[cfg(target_arch = "wasm32")] {
+    #[cfg(target_arch = "wasm32")]
+    {
         // TODO: Implement async file choice
         return None;
     }
@@ -675,7 +679,7 @@ impl eframe::App for MainApp {
 
             enum ListTask {
                 None,
-                RemoveRow(usize)
+                RemoveRow(usize),
             }
 
             let mut task = ListTask::None;
@@ -819,7 +823,7 @@ impl eframe::App for MainApp {
                             // Column end
 
                             match task {
-                                ListTask::None => {},
+                                ListTask::None => {}
                                 ListTask::RemoveRow(row_index) => {
                                     self.search.remove_source(row_index);
                                     self.status = AppStatus::Info("Removed 1 source".to_owned());
