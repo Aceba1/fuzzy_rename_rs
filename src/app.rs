@@ -165,9 +165,9 @@ impl FuzzySearch {
         }
     }
 
-    // fn remove_source(&mut self, index: usize) {
-    //     self.source_names.remove(index);
-    // }
+    fn remove_source(&mut self, index: usize) {
+        self.source_names.remove(index);
+    }
 
     // fn remove_choice(&mut self, index: usize) {
     //     self.choice_names.swap_remove(index);
@@ -668,6 +668,13 @@ impl eframe::App for MainApp {
         CentralPanel::default().show(ctx, |ui| {
             ui.style_mut().wrap = Some(false);
 
+            enum ListTask {
+                None,
+                RemoveRow(usize)
+            }
+
+            let mut task = ListTask::None;
+
             TableBuilder::new(ui)
                 .striped(true)
                 .auto_shrink([false; 2])
@@ -776,6 +783,12 @@ impl eframe::App for MainApp {
                                             item.reset_choice();
                                         }
                                     }
+                                    ui.menu_button("Remove source", |ui| {
+                                        ui.label("Are you sure?");
+                                        if ui.button("Yes").clicked() {
+                                            task = ListTask::RemoveRow(row_index);
+                                        }
+                                    })
                                 });
                             });
 
@@ -797,6 +810,16 @@ impl eframe::App for MainApp {
                                     self.rename(&item_name, &reference)
                                 }));
                             });
+
+                            // Column end
+
+                            match task {
+                                ListTask::None => {},
+                                ListTask::RemoveRow(row_index) => {
+                                    self.search.remove_source(row_index);
+                                    self.status = AppStatus::Info("Removed 1 source".to_owned());
+                                }
+                            }
                         },
                     );
                 });
