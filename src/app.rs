@@ -308,8 +308,8 @@ impl eframe::App for MainApp {
             menu::bar(ui, |ui| {
                 // Sources
                 ui.menu_button("Sources", |ui| {
-                    ui.label("Base names to match to");
-                    ui.label("All files will be used");
+                    ui.weak("Base names to match to");
+                    ui.weak("All files will be used");
                     ui.separator();
 
                     // We can't import from folders on the web
@@ -364,8 +364,8 @@ impl eframe::App for MainApp {
 
                 // Choices
                 ui.menu_button("Choices", |ui| {
-                    ui.label("References to match with");
-                    ui.label("Matched files will be used");
+                    ui.weak("References to match with");
+                    ui.weak("Matched files will be used");
                     ui.separator();
 
                     // We can't import from folders on the web
@@ -436,14 +436,14 @@ impl eframe::App for MainApp {
 
                 // Renames
                 ui.menu_button("Output", |ui| {
-                    ui.label("Results of fuzzy rename");
-                    ui.label("Files are copied to output");
+                    ui.weak("Results of fuzzy rename");
+                    ui.weak("Files are copied to output");
 
                     ui.separator();
 
                     ui.toggle_value(&mut self.keep_extension, "Keep extensions");
 
-                    ui.label("Files to copy:");
+                    ui.weak("Files to copy:");
                     ui.radio_value(&mut self.side_to_copy, SideToUse::Choices, "Rename Choices");
                     ui.radio_value(&mut self.side_to_copy, SideToUse::Sources, "Rename Sources");
 
@@ -496,11 +496,11 @@ impl eframe::App for MainApp {
                 // Options
                 ui.menu_button("Options", |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("Similarity Threshold");
-                        ui.add(Slider::new(&mut self.threshold, 0.0..=1.0));
+                        ui.add(Slider::new(&mut self.threshold, 0.0..=1.0).text("Similarity"));
                     });
 
                     let mut changed;
+                    ui.weak("Search Algorithm:");
                     changed = ui
                         .radio_value(&mut self.search.algorithm, SearchAlgorithm::Jaro, "Jaro")
                         .changed();
@@ -534,7 +534,7 @@ impl eframe::App for MainApp {
 
                     ui.separator();
 
-                    ui.label("Window Theme:");
+                    ui.weak("Window Theme:");
                     let mut changed;
                     changed = ui
                         .radio_value(&mut self.window_theme, WindowTheme::Light, "Light")
