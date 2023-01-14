@@ -742,7 +742,6 @@ impl eframe::App for MainApp {
                             // Source Name
 
                             let item_name = item.file.name.clone();
-
                             row.col(|ui| {
                                 ui.label(&item_name);
                             });
@@ -761,40 +760,47 @@ impl eframe::App for MainApp {
 
                             row.col(|ui| {
                                 ui.menu_button(choice_similarity, |ui| {
+                                    ui.set_min_size(Vec2::new(250.0, 0.0));
+
                                     // TODO: Add match picker window
-                                    // if ui.button("Pick a match...").clicked() { }
+                                    // if ui.button("Search for a match").clicked() { }
 
-                                    ui.separator();
+                                    ui.weak("Pick a match:");
 
-                                    for (c_index, choice) in
-                                        item.choice_map.clone().iter().enumerate()
-                                    {
-                                        let mut btn = Button::new(format!(
-                                            "[{:2.2}%] {}",
-                                            100.0 * choice.1,
-                                            remove_extension(
-                                                &self.search.choice_names[choice.0].name
-                                            )
-                                        ));
-                                        if (c_index % 2) == 1 {
-                                            btn = btn.fill(ui.visuals().faint_bg_color);
-                                        }
-
+                                    for (c_index, c_score) in item.choice_map.clone() {
+                                        let btn = RadioButton::new(
+                                            item.manual_choice
+                                                .flatten()
+                                                .map_or(false, |c| c == c_index),
+                                            format!(
+                                                "[{:2.2}%] {}",
+                                                100.0 * c_score,
+                                                remove_extension(
+                                                    &self.search.choice_names[c_index].name
+                                                )
+                                            ),
+                                        );
                                         if ui.add(btn).clicked() {
-                                            item.set_choice(Some(choice.0));
+                                            item.set_choice(Some(c_index));
                                         }
                                     }
-                                    if ui.button("[Don't use match]").clicked() {
+
+                                    let btn = RadioButton::new(
+                                        item.manual_choice.map_or(false, |c| c.is_none()),
+                                        "[Don't use match]",
+                                    );
+                                    if ui.add(btn).clicked() {
                                         item.set_choice(None);
                                     }
 
-                                    ui.separator();
-
-                                    if item.manual_choice.is_some() {
-                                        if ui.button("Restore default").clicked() {
+                                    ui.add_enabled_ui(item.manual_choice.is_some(), |ui| {
+                                        if ui.button("Reset to default").clicked() {
                                             item.reset_choice();
                                         }
-                                    }
+                                    });
+
+                                    ui.separator();
+
                                     ui.menu_button("Remove source", |ui| {
                                         ui.label("Are you sure?");
                                         if ui.button("Yes").clicked() {
