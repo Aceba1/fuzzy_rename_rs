@@ -189,7 +189,7 @@ enum SideToUse {
 enum AppStatus {
     None,
     Info(String),
-    // Error(String),
+    Error(String),
     // Progress(String, f32),
 }
 
@@ -480,9 +480,42 @@ impl eframe::App for MainApp {
                             if let Some(folder) = folder {
                                 self.renames_path = folder.to_str().unwrap().to_owned();
 
-                                for rename in self.iter_renames(self.copy_failed_sources) {
-                                    fs::copy(rename.0, folder.join(rename.1))
-                                        .expect("Should copy renamed file"); // TODO: Source can be deleted
+                                let mut copy_count = 0usize;
+                                let mut replace_count = 0usize;
+                                let mut failed_count = 0usize;
+
+                                for (file_origin, new_name) in self.iter_renames(self.copy_failed_sources) {
+                                    let destination = folder.join(new_name);
+
+                                    match destination.try_exists().and_then(|overwrite| {
+                                        fs::copy(file_origin, &destination).map(|_| overwrite)
+                                    }) {
+                                        Ok(true) => {
+                                            replace_count += 1;
+                                            copy_count += 1;
+                                        }
+                                        Ok(false) => {
+                                            copy_count += 1;
+                                        }
+                                        Err(error) => {
+                                            eprintln!("Could not copy file: {} ({:?} -> {:?})", error, file_origin, destination.to_str());
+                                            failed_count += 1;
+                                        }
+                                    }
+                                }
+
+                                let mut results: Vec<String> = Vec::with_capacity(3);
+                                if copy_count > 0 {
+                                    results.push(format!("{copy_count} Copied"));
+                                }
+                                if replace_count > 0 {
+                                    results.push(format!("{replace_count} Replaced"));
+                                }
+                                if failed_count > 0 {
+                                    results.push(format!("{failed_count} Failed"));
+                                    self.status = AppStatus::Error(results.join(" | "));
+                                } else {
+                                    self.status = AppStatus::Info(results.join(" | "));
                                 }
                             }
                         }
@@ -498,12 +531,45 @@ impl eframe::App for MainApp {
                             ui.menu_button("Directly rename files", |ui| {
                                 ui.label("Are you sure?");
                                 if ui.button("Yes").clicked() {
-                                    for rename in self.iter_renames(false) {
-                                        fs::rename(
-                                            rename.0,
-                                            rename.0.parent().unwrap().join(rename.1),
-                                        )
-                                        .expect("Should rename source file"); // TODO: Fails on repeated run
+                                    let mut rename_count = 0usize;
+                                    let mut replace_count = 0usize;
+                                    let mut failed_count = 0usize;
+
+                                    for (file_origin, new_name) in self.iter_renames(false) {
+                                        if let Some(destination) = file_origin.parent().map(|p| p.join(new_name)) {
+                                            match destination.try_exists().and_then(|overwrite| {
+                                                fs::rename(file_origin, &destination).map(|_| overwrite)
+                                            }) {
+                                                Ok(true) => {
+                                                    replace_count += 1;
+                                                    rename_count += 1;
+                                                }
+                                                Ok(false) => {
+                                                    rename_count += 1;
+                                                }
+                                                Err(error) => {
+                                                    eprintln!("Could not rename file: {} ({:?} -> {:?})", error, file_origin, destination.to_str());
+                                                    failed_count += 1;
+                                                }
+                                            }
+                                        } else {
+                                            eprintln!("Could not rename file: Malformed parent in filepath ({:?})", file_origin);
+                                            failed_count += 1;
+                                        }
+                                    }
+
+                                    let mut results: Vec<String> = Vec::with_capacity(3);
+                                    if rename_count > 0 {
+                                        results.push(format!("{rename_count} Renamed"));
+                                    }
+                                    if replace_count > 0 {
+                                        results.push(format!("{replace_count} Replaced"));
+                                    }
+                                    if failed_count > 0 {
+                                        results.push(format!("{failed_count} Failed"));
+                                        self.status = AppStatus::Error(results.join(" | "));
+                                    } else {
+                                        self.status = AppStatus::Info(results.join(" | "));
                                     }
                                 }
                             });
@@ -581,9 +647,9 @@ impl eframe::App for MainApp {
                             AppStatus::Info(message) => {
                                 ui.weak(message);
                             }
-                            // AppStatus::Error(message) => {
-                            //     ui.strong(message);
-                            // }
+                            AppStatus::Error(message) => {
+                                ui.strong(message);
+                            }
                             // AppStatus::Progress(message, value) => {
                             //     ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
                             //         let progress_bar = ProgressBar::new(*value).show_percentage();
