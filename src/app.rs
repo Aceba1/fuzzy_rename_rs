@@ -182,8 +182,8 @@ enum WindowTheme {
 
 #[derive(serde::Deserialize, serde::Serialize, PartialEq, Eq)]
 enum SideToUse {
-    Sources,
     Choices,
+    Sources,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -279,8 +279,8 @@ impl MainApp {
 
     fn rename(&self, source: &str, choice: &str) -> String {
         let (original, reference) = match self.side_to_copy {
-            SideToUse::Sources => (source, choice),
             SideToUse::Choices => (choice, source),
+            SideToUse::Sources => (source, choice),
         };
 
         let extension = original.rsplit_once('.').map_or("", |(_, s)| s);
@@ -443,8 +443,8 @@ impl eframe::App for MainApp {
                     ui.toggle_value(&mut self.keep_extension, "Keep extensions");
 
                     ui.label("Files to copy:");
-                    ui.radio_value(&mut self.side_to_copy, SideToUse::Sources, "Rename Sources");
                     ui.radio_value(&mut self.side_to_copy, SideToUse::Choices, "Rename Choices");
+                    ui.radio_value(&mut self.side_to_copy, SideToUse::Sources, "Rename Sources");
 
                     ui.separator();
 
@@ -593,8 +593,8 @@ impl eframe::App for MainApp {
                         ui.label(format!(
                             "Renamed File ({})",
                             match self.side_to_copy {
-                                SideToUse::Sources => "Sources",
                                 SideToUse::Choices => "Choices",
+                                SideToUse::Sources => "Sources",
                             }
                         ));
                     });
