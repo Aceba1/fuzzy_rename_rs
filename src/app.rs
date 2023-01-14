@@ -123,14 +123,13 @@ impl SourceName {
     }
 
     fn update_choices(&mut self, choice_names: &Vec<FilePath>, algorithm: &SearchAlgorithm) {
-        // let mut scores: BTreeMap<u32, (usize, f32)> = BTreeMap::new();
         let name = remove_extension(&self.file.name);
         let mut scores: [(usize, f32); CHOICE_PREVIEW_COUNT] = [(0, -1.0); 10];
 
         for (index, choice) in choice_names.iter().enumerate() {
             let score = algorithm.compare(name, remove_extension(&choice.name)) as f32;
 
-            let mut lowest: f32 = 2.0; // Or infinity
+            let mut lowest: f32 = 2.0; // f32::INFINITY
             let mut replace: usize = 0;
             for i in 0usize..CHOICE_PREVIEW_COUNT {
                 let (_, i_score) = scores[i];
@@ -147,7 +146,6 @@ impl SourceName {
         self.choice_map =
             Vec::from(&scores[0..scores.iter().position(|(_, s)| -1.0 == *s).unwrap_or(10)]);
         self.choice_map.sort_by(|a, b| b.1.total_cmp(&a.1));
-        // self.choice_map = scores.into_values().rev().take(10).collect();
     }
 }
 
@@ -342,10 +340,16 @@ impl eframe::App for MainApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
+        // Menu bar
+
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
+
             // Files bar
+
             menu::bar(ui, |ui| {
+
                 // Sources
+
                 ui.menu_button("Sources", |ui| {
                     ui.weak("Base names to match to");
                     ui.weak("All files will be used");
@@ -402,6 +406,7 @@ impl eframe::App for MainApp {
                 });
 
                 // Choices
+
                 ui.menu_button("Choices", |ui| {
                     ui.weak("References to match with");
                     ui.weak("Matched files will be used");
@@ -454,11 +459,8 @@ impl eframe::App for MainApp {
 
                     ui.separator();
 
-                    ui.add_enabled_ui(false, |ui| {
-                        if ui.button("Manage references...").clicked() {
-                            // TODO: Open Window dialog with checked list
-                        }
-                    });
+                    // TODO: Open Window dialog with checked list
+                    // if ui.button("Manage references...").clicked() { }
 
                     ui.menu_button("Clear all references", |ui| {
                         ui.label("Are you sure?");
@@ -471,6 +473,7 @@ impl eframe::App for MainApp {
                 });
 
                 // Renames
+
                 ui.menu_button("Output", |ui| {
                     ui.weak("Results of fuzzy rename");
                     ui.weak("Files are copied to output");
@@ -589,6 +592,7 @@ impl eframe::App for MainApp {
                 ui.separator();
 
                 // Options
+
                 ui.menu_button("Options", |ui| {
                     ui.horizontal(|ui| {
                         ui.add(Slider::new(&mut self.threshold, 0.0..=1.0).text("Similarity"));
@@ -755,11 +759,8 @@ impl eframe::App for MainApp {
 
                             row.col(|ui| {
                                 ui.menu_button(choice_similarity, |ui| {
-                                    ui.add_enabled_ui(false, |ui| {
-                                        if ui.button("Pick a match...").clicked() {
-                                            // TODO: Add match picker window
-                                        }
-                                    });
+                                    // TODO: Add match picker window
+                                    // if ui.button("Pick a match...").clicked() { }
 
                                     ui.separator();
 
@@ -832,7 +833,6 @@ impl eframe::App for MainApp {
                         },
                     );
                 });
-            //});
         });
     }
 }
