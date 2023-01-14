@@ -207,9 +207,9 @@ pub struct MainApp {
 impl Default for MainApp {
     fn default() -> Self {
         Self {
-            sources_path: "".to_string(),
-            choices_path: "".to_string(),
-            renames_path: "".to_string(),
+            sources_path: "".to_owned(),
+            choices_path: "".to_owned(),
+            renames_path: "".to_owned(),
             keep_extension: false,
             side_to_copy: SideToUse::Choices,
             copy_failed_sources: true,
@@ -623,7 +623,7 @@ impl eframe::App for MainApp {
                             let choice_similarity = if let Some(value) = current_score {
                                 format!("{:2.0}%", 100.0 * value)
                             } else {
-                                "N/A".to_string()
+                                "N/A".to_owned()
                             };
 
                             row.col(|ui| {
@@ -676,7 +676,7 @@ impl eframe::App for MainApp {
                             // Renamed File
 
                             row.col(|ui| {
-                                ui.label(choice_name.map_or("".to_string(), |reference| {
+                                ui.label(choice_name.map_or("".to_owned(), |reference| {
                                     self.rename(&item_name, &reference)
                                 }));
                             });
