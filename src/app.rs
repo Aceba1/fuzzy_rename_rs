@@ -259,9 +259,10 @@ impl MainApp {
             .iter()
             .filter_map(|source| {
                 let current_choice = source.current_choice();
-                let score = source.current_score();
-                if current_choice.is_some() && score.map_or(true, |s| s >= self.threshold) {
-                    let choice = &self.search.choice_names[current_choice.unwrap()];
+                let below_threshold = source.current_score().map_or(false, |s| s < self.threshold);
+
+                let choice = current_choice.and_then(|c| self.search.choice_names.get(c));
+                if let Some(choice) = choice.filter(|_| !below_threshold) {
                     let rename = self.rename(&source.file.name, &choice.name);
                     let path = match self.side_to_copy {
                         SideToUse::Choices => &choice.path,
@@ -667,7 +668,7 @@ impl eframe::App for MainApp {
                             let choice_name = item
                                 .current_choice()
                                 .filter(|_| !below_threshold)
-                                .map(|i| &self.search.choice_names[i].name);
+                                .and_then(|i| self.search.choice_names.get(i).map(|c| &c.name));
 
                             row.col(|ui| {
                                 ui.label(choice_name.unwrap_or(&"".into()));
