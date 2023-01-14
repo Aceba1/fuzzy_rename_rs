@@ -6,6 +6,7 @@ use egui_extras::{Column, TableBuilder};
 use std::fs::read_dir;
 
 const CHOICE_PREVIEW_COUNT: usize = 10;
+const WASM_NO_FOLDERS_TOOLTIP: &str = "Cannot access folders in web build";
 
 fn remove_extension(s: &str) -> &str {
     &s[0..s.rfind('.').unwrap_or(s.len())]
@@ -355,9 +356,8 @@ impl eframe::App for MainApp {
                     ui.weak("All files will be used");
                     ui.separator();
 
-                    // We can't import from folders on the web
                     ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
-                        if ui.button("Import folder").clicked() {
+                        if ui.button("Import folder").on_disabled_hover_text(WASM_NO_FOLDERS_TOOLTIP).clicked() {
                             let folder = pick_folder(&self.sources_path, "Choose a folder with source files");
 
                             if let Some(folder) = folder {
@@ -412,9 +412,8 @@ impl eframe::App for MainApp {
                     ui.weak("Matched files will be used");
                     ui.separator();
 
-                    // We can't import from folders on the web
                     ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
-                        if ui.button("Import folder").clicked() {
+                        if ui.button("Import folder").on_disabled_hover_text(WASM_NO_FOLDERS_TOOLTIP).clicked() {
                             let folder = pick_folder(&self.choices_path, "Choose a folder with reference files");
 
                             if let Some(folder) = folder {
@@ -488,9 +487,8 @@ impl eframe::App for MainApp {
 
                     ui.separator();
 
-                    // We can't really do anything with folders on the web
                     ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
-                        if ui.button("Copy results to folder").clicked() {
+                        if ui.button("Copy results to folder").on_disabled_hover_text(WASM_NO_FOLDERS_TOOLTIP).clicked() {
                             let folder = pick_folder(&self.renames_path, "Choose a folder to copy renamed files to");
 
                             if let Some(folder) = folder {
@@ -533,15 +531,19 @@ impl eframe::App for MainApp {
                                 self.status = AppStatus::Notice(results.join(" | "));
                             }
                         }
+                    });
 
-                        if self.side_to_copy == SideToUse::Sources {
-                            ui.toggle_value(
-                                &mut self.copy_failed_sources,
-                                "Include missing results",
-                            );
+                    if self.side_to_copy == SideToUse::Sources {
+                        ui.toggle_value(
+                            &mut self.copy_failed_sources,
+                            "Include missing results",
+                        );
 
-                            ui.separator();
+                        ui.separator();
 
+                        // TODO: Add output compatible with WASM
+
+                        ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
                             ui.menu_button("Directly rename files", |ui| {
                                 ui.label("Are you sure?");
                                 if ui.button("Yes").clicked() {
@@ -584,9 +586,9 @@ impl eframe::App for MainApp {
                                     }
                                     self.status = AppStatus::Notice(results.join(" | "));
                                 }
-                            });
-                        }
-                    });
+                            }).response.on_disabled_hover_text(WASM_NO_FOLDERS_TOOLTIP);
+                        });
+                    }
                 });
 
                 ui.separator();
