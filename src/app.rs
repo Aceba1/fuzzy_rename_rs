@@ -186,6 +186,13 @@ enum SideToUse {
     Sources,
 }
 
+enum AppStatus {
+    None,
+    Info(String),
+    // Error(String),
+    // Progress(String, f32),
+}
+
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct MainApp {
@@ -202,6 +209,9 @@ pub struct MainApp {
     threshold: f32,
 
     search: FuzzySearch,
+
+    #[serde(skip)]
+    status: AppStatus,
 }
 
 impl Default for MainApp {
@@ -216,6 +226,7 @@ impl Default for MainApp {
             window_theme: WindowTheme::Light,
             threshold: 0.7,
             search: FuzzySearch::default(),
+            status: AppStatus::None,
         }
     }
 }
@@ -324,11 +335,14 @@ impl eframe::App for MainApp {
                                 self.sources_path = folder.to_str().unwrap().to_owned();
 
                                 if let Ok(read_dir) = read_dir(folder) {
+                                    let mut count = 0usize;
                                     for item in read_dir.filter_map(|i| i.ok()) {
                                         if item.file_type().map_or(false, |f| f.is_file()) {
                                             self.search.add_source(item.path());
+                                            count += 1;
                                         }
                                     }
+                                    self.status = AppStatus::Info(format!("Added {count} source(s)"));
                                 }
                             }
                         }
@@ -346,9 +360,11 @@ impl eframe::App for MainApp {
                                     file.parent().unwrap().to_str().unwrap().to_owned();
                             }
 
+                            let count = files.len();
                             for item in files {
                                 self.search.add_source(item);
                             }
+                            self.status = AppStatus::Info(format!("Added {count} source(s)"));
                         }
                     }
 
@@ -358,6 +374,7 @@ impl eframe::App for MainApp {
                         ui.label("Are you sure?");
                         if ui.button("Yes").clicked() {
                             self.search.source_names.clear();
+                            self.status = AppStatus::Info("Cleared all sources".to_owned());
                         }
                     })
                 });
@@ -380,16 +397,17 @@ impl eframe::App for MainApp {
                                 self.choices_path = folder.to_str().unwrap().to_owned();
 
                                 if let Ok(read_dir) = read_dir(folder) {
-                                    let mut flag = false;
+                                    let mut count = 0usize;
                                     for item in read_dir.filter_map(|i| i.ok()) {
                                         if item.file_type().map_or(false, |f| f.is_file()) {
                                             self.search.add_choice(item.path());
-                                            flag |= true;
+                                            count += 1;
                                         }
                                     }
-                                    if flag {
+                                    if count > 0 {
                                         self.search.update_all();
                                     }
+                                    self.status = AppStatus::Info(format!("Added {count} reference(s)"));
                                 }
                             }
                         }
@@ -408,10 +426,12 @@ impl eframe::App for MainApp {
                                         file.parent().unwrap().to_str().unwrap().to_owned();
                                 }
 
+                                let count = files.len();
                                 for item in files {
                                     self.search.add_choice(item);
                                 }
                                 self.search.update_all();
+                                self.status = AppStatus::Info(format!("Added {count} reference(s)"));
                             }
                         }
                     }
@@ -429,7 +449,7 @@ impl eframe::App for MainApp {
                         if ui.button("Yes").clicked() {
                             self.search.choice_names.clear();
                             self.search.update_all();
-                            // Delete all references
+                            self.status = AppStatus::Info("Cleared all references".to_owned());
                         }
                     })
                 });
@@ -530,6 +550,7 @@ impl eframe::App for MainApp {
                         | changed;
                     if changed {
                         self.search.update_all();
+                        self.status = AppStatus::Info("Updated search algorithm".to_owned());
                     }
 
                     ui.separator();
@@ -548,9 +569,30 @@ impl eframe::App for MainApp {
                     }
                 });
 
-                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    // Little helper in case it's a debug build
-                    warn_if_debug_build(ui);
+                ui.add_space(50.0);
+
+                ui.horizontal(|ui| {
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        // Little helper in case it's a debug build
+                        warn_if_debug_build(ui);
+
+                        match &self.status {
+                            AppStatus::None => {}
+                            AppStatus::Info(message) => {
+                                ui.weak(message);
+                            }
+                            // AppStatus::Error(message) => {
+                            //     ui.strong(message);
+                            // }
+                            // AppStatus::Progress(message, value) => {
+                            //     ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
+                            //         let progress_bar = ProgressBar::new(*value).show_percentage();
+                            //         ui.weak(message);
+                            //         ui.add(progress_bar);
+                            //     });
+                            // }
+                        }
+                    });
                 });
             });
         });
