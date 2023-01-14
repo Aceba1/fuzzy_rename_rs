@@ -1,9 +1,9 @@
-var cacheName = 'egui-template-pwa';
+var cacheName = 'fuzzy-rename-rs-pwa';
 var filesToCache = [
   './',
   './index.html',
-  './eframe_template.js',
-  './eframe_template_bg.wasm',
+  './fuzzy_rename_rs.js',
+  './fuzzy_rename_rs_bg.wasm',
 ];
 
 /* Start the service worker and cache all of the app's content */
