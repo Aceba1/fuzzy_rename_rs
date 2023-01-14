@@ -2,7 +2,6 @@ use std::{fs, path::PathBuf};
 
 use egui::*;
 use egui_extras::{Column, TableBuilder};
-use rfd::FileDialog;
 
 use std::fs::read_dir;
 
@@ -10,6 +9,31 @@ const CHOICE_PREVIEW_COUNT: usize = 10;
 
 fn remove_extension(s: &str) -> &str {
     &s[0..s.rfind('.').unwrap_or(s.len())]
+}
+
+fn pick_folder(directory: &str, title: &str) -> Option<PathBuf> {
+    #[cfg(not(target_arch = "wasm32"))] {
+        return rfd::FileDialog::new()
+            .set_directory(directory)
+            .set_title(title)
+            .pick_folder();
+    }
+    #[cfg(target_arch = "wasm32")] {
+        return None;
+    }
+}
+
+fn pick_files(directory: &str, title: &str) -> Option<Vec<PathBuf>> {
+    #[cfg(not(target_arch = "wasm32"))] {
+        return rfd::FileDialog::new()
+            .set_directory(directory)
+            .set_title(title)
+            .pick_files();
+    }
+    #[cfg(target_arch = "wasm32")] {
+        // TODO: Implement async file choice
+        return None;
+    }
 }
 
 #[derive(Clone, Default)]
@@ -326,10 +350,7 @@ impl eframe::App for MainApp {
                     // We can't import from folders on the web
                     ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
                         if ui.button("Import folder").clicked() {
-                            let folder = FileDialog::new()
-                                .set_title("Choose a folder with source files")
-                                .set_directory(&self.sources_path)
-                                .pick_folder();
+                            let folder = pick_folder(&self.sources_path, "Choose a folder with source files");
 
                             if let Some(folder) = folder {
                                 self.sources_path = folder.to_str().unwrap().to_owned();
@@ -349,10 +370,7 @@ impl eframe::App for MainApp {
                     });
 
                     if ui.button("Import files").clicked() {
-                        let files = FileDialog::new()
-                            .set_title("Choose source files")
-                            .set_directory(&self.sources_path)
-                            .pick_files();
+                        let files = pick_files(&self.sources_path, "Choose source files");
 
                         if let Some(files) = files {
                             if let Some(file) = files.first() {
@@ -388,10 +406,7 @@ impl eframe::App for MainApp {
                     // We can't import from folders on the web
                     ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
                         if ui.button("Import folder").clicked() {
-                            let folder = FileDialog::new()
-                                .set_title("Choose a folder with reference files")
-                                .set_directory(&self.choices_path)
-                                .pick_folder();
+                            let folder = pick_folder(&self.choices_path, "Choose a folder with reference files");
 
                             if let Some(folder) = folder {
                                 self.choices_path = folder.to_str().unwrap().to_owned();
@@ -414,10 +429,7 @@ impl eframe::App for MainApp {
                     });
 
                     if ui.button("Import files").clicked() {
-                        let files = FileDialog::new()
-                            .set_title("Choose reference files")
-                            .set_directory(&self.choices_path)
-                            .pick_files();
+                        let files = pick_files(&self.choices_path, "Choose reference files");
 
                         if let Some(files) = files {
                             if !files.is_empty() {
@@ -472,10 +484,7 @@ impl eframe::App for MainApp {
                     // We can't really do anything with folders on the web
                     ui.add_enabled_ui(cfg!(not(target_arch = "wasm32")), |ui| {
                         if ui.button("Copy results to folder").clicked() {
-                            let folder = FileDialog::new()
-                                .set_title("Choose a folder to copy renamed files to")
-                                .set_directory(&self.renames_path)
-                                .pick_folder();
+                            let folder = pick_folder(&self.renames_path, "Choose a folder to copy renamed files to");
 
                             if let Some(folder) = folder {
                                 self.renames_path = folder.to_str().unwrap().to_owned();
