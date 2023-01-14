@@ -189,7 +189,7 @@ enum SideToUse {
 enum AppStatus {
     None,
     Info(String),
-    Error(String),
+    Notice(String),
     // Progress(String, f32),
 }
 
@@ -513,10 +513,8 @@ impl eframe::App for MainApp {
                                 }
                                 if failed_count > 0 {
                                     results.push(format!("{failed_count} Failed"));
-                                    self.status = AppStatus::Error(results.join(" | "));
-                                } else {
-                                    self.status = AppStatus::Info(results.join(" | "));
                                 }
+                                self.status = AppStatus::Notice(results.join(" | "));
                             }
                         }
 
@@ -567,10 +565,8 @@ impl eframe::App for MainApp {
                                     }
                                     if failed_count > 0 {
                                         results.push(format!("{failed_count} Failed"));
-                                        self.status = AppStatus::Error(results.join(" | "));
-                                    } else {
-                                        self.status = AppStatus::Info(results.join(" | "));
                                     }
+                                    self.status = AppStatus::Notice(results.join(" | "));
                                 }
                             });
                         }
@@ -647,7 +643,7 @@ impl eframe::App for MainApp {
                             AppStatus::Info(message) => {
                                 ui.weak(message);
                             }
-                            AppStatus::Error(message) => {
+                            AppStatus::Notice(message) => {
                                 ui.strong(message);
                             }
                             // AppStatus::Progress(message, value) => {
