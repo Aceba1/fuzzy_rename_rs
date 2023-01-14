@@ -1,5 +1,5 @@
 # Fuzzy Rename-RS
 
-Base template: [eframe_template](https://deps.rs/repo/github/emilk/eframe_template/)
+Base template: [eframe_template](https://github.com/emilk/egui/tree/master/crates/eframe)
 
 _TODO: Fill out README_
