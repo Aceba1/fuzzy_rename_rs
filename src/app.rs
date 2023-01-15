@@ -828,19 +828,17 @@ impl eframe::App for MainApp {
                                     self.rename(&item_name, &reference)
                                 }));
                             });
-
-                            // Column end
-
-                            match task {
-                                ListTask::None => {}
-                                ListTask::RemoveRow(row_index) => {
-                                    self.search.remove_source(row_index);
-                                    self.status = AppStatus::Info("Removed 1 source".to_owned());
-                                }
-                            }
                         },
                     );
                 });
+
+            match task {
+                ListTask::None => {}
+                ListTask::RemoveRow(row_index) => {
+                    self.search.remove_source(row_index);
+                    self.status = AppStatus::Info("Removed 1 source".to_owned());
+                }
+            }
         });
     }
 }
